@@ -80,7 +80,8 @@ export function buildCsvDb(csv: string, api: Db, mtime: number): Db {
     source: { label: "football-data.co.uk", lastGame: last },
     estimatedRounds: true,
     season,
-    updatedAt: mtime,
+    // data do arquivo não serve: a Vercel zera os mtimes no deploy
+    updatedAt: last ? new Date(last).getTime() : mtime,
     teams,
     matches,
     fixtures,

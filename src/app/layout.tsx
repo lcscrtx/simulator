@@ -44,7 +44,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             )}
             {db.mode === "csv" && db.source?.lastGame && (
               <span className="ml-auto text-xs rounded-full px-2 py-0.5 bg-accent/15 text-accent" title={`Fonte: ${db.source.label}`}>
-                Dados reais até {new Date(db.source.lastGame).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}
+                Dados reais até {new Date(db.source.lastGame).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", timeZone: "America/Sao_Paulo" })}
               </span>
             )}
           </div>
@@ -62,7 +62,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <footer className="mx-auto w-full max-w-6xl px-4 py-6 text-xs text-muted">
           Modelo Poisson/Dixon-Coles com decaimento temporal + Monte Carlo. Probabilidades são estimativas para análise, não
           garantia de resultado. Dados: {db.mode === "csv" ? "resultados football-data.co.uk, escudos API Futebol" : "API Futebol"}
-          {db.updatedAt ? ` · atualizado ${new Date(db.updatedAt).toLocaleString("pt-BR")}` : ""}.
+          {db.updatedAt ? ` · atualizado ${new Date(db.updatedAt).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}` : ""}.
         </footer>
       </body>
     </html>
