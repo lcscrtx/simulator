@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Simulador do Futebol Brasileiro
 
-## Getting Started
+Probabilidades, projeções de tabela e dados de partidas para Brasileirão, Copa do Brasil e Libertadores.
 
-First, run the development server:
+## Rodar
 
 ```bash
+cp .env.example .env.local   # coloque sua chave da API Futebol
+npm install
+npm run sync                 # baixa dados para data/cache (respeita o limite diário)
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Chave `test_` = dados fictícios e sem consumir o plano. Troque por `live_` para dados reais.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Como funciona
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `scripts/sync.mjs`: único ponto que chama a API. Cache em disco com TTL por recurso e teto diário
+  (`API_FUTEBOL_DAILY_BUDGET`, padrão 90). Se o limite acabar, o próximo sync continua de onde parou.
+- `src/lib/data.ts`: lê o cache e normaliza times, partidas, jogos futuros, escalações e copas.
+- `src/lib/model.ts`: força de ataque/defesa por time (Poisson com decaimento temporal de 300 dias),
+  placares via Dixon-Coles, Monte Carlo da temporada (10 mil simulações) e de mata-mata, e o peso
+  heurístico de desfalques para o modo "e se".
+- Páginas: tabela + projeção (`/`), rodadas, partida (`/partida/[id]`), copas e simulador de confronto.
 
-## Learn More
+### Orçamento de requisições (plano com 100/dia)
 
-To learn more about Next.js, take a look at the following resources:
+| Recurso | Custo | Frequência |
+| --- | --- | --- |
+| Histórico de cada time | 20 | semanal |
+| Rodadas futuras | ~20 | 1ª vez; depois só as próximas |
+| Detalhes de partidas | ~10 por rodada | nunca re-buscados |
+| Copas (fases abertas) | poucas | a cada 12h |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Qualidade do modelo
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run backtest   # prevê 2024–2026 jogo a jogo só com dados anteriores e compara com o resultado e com as odds
+npm test           # testes da lógica do simulador (tabela, cenários, rivais, desempate, Monte Carlo)
+```
 
-## Deploy on Vercel
+Dados do backtest: `data/external/BRA.csv` (football-data.co.uk, resultados + odds de fechamento do Brasileirão).
+Resultado atual (1.079 jogos): log loss 1,0095 (mercado 0,9867; só mando de campo 1,0495), 50,9% de acerto (mercado 52,7%).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Fontes de dados
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+O app escolhe sozinho (ou force com `DATA_SOURCE=api|csv`):
+
+1. **API Futebol com chave `live_`**: calendário, escalações, estatísticas, copas.
+2. **CSV do football-data.co.uk** (padrão sem chave live): resultados reais do Brasileirão. Atualize com `npm run sync:csv`.
+   Sem calendário: os jogos restantes são os confrontos que faltam e as rodadas são estimadas. Escudos vêm da API.
+3. **API sandbox (`test_`)**: dados fictícios, só para desenvolvimento.

@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+!.env.example
+
+# dados de terceiros: baixados no build (npm run sync:csv)
+data/external/*.csv
+.DS_Store
+Thumbs.db

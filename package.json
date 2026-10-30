@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "sync": "node --env-file=.env.local scripts/sync.mjs",
+    "test": "node --test tests/*.test.ts",
+    "backtest": "node scripts/backtest.ts",
+    "sync:csv": "node scripts/sync-csv.mjs",
+    "prebuild": "node scripts/sync-csv.mjs --soft"
   },
   "dependencies": {
     "next": "16.4.3",
